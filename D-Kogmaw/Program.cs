@@ -17,7 +17,7 @@ namespace D_Kogmaw
         private const string ChampionName = "KogMaw";
 
 
-        public static AIHeroClient _player
+        private static AIHeroClient _player
         {
             get { return ObjectManager.Player; }
         }
@@ -130,7 +130,8 @@ namespace D_Kogmaw
                 Combo();
             }
             if (Orbwalker.ActiveModesFlags == Orbwalker.ActiveModes.Harass)
-            {;
+            {
+                ;
                 var useW = _harass["UseWH"].Cast<CheckBox>().CurrentValue;
                 var eTarget = TargetSelector.GetTarget(_e.Range, DamageType.Physical);
                 if (useW && _w.IsReady() && eTarget.IsValidTarget(_e.Range))
@@ -147,12 +148,12 @@ namespace D_Kogmaw
             }
             if (Orbwalker.ActiveModesFlags == Orbwalker.ActiveModes.LaneClear)
             {
-                var minion = (EntityManager.GetLaneMinions(EntityManager.UnitTeam.Enemy,_player.Position.To2D(), 1000f));
+                var minion =
+                    (EntityManager.GetLaneMinions(EntityManager.UnitTeam.Enemy, _player.Position.To2D(), 1000f));
 
                 var useW = _farmmenu["UseWL"].Cast<CheckBox>().CurrentValue;
                 if (minion != null)
                 {
-                    Chat.Print("lane 3");
                     if (useW && _w.IsReady())
                     {
                         _w.Cast();
@@ -161,31 +162,30 @@ namespace D_Kogmaw
                 if (_player.ManaPercent > _farmmenu["Lanemana"].Cast<Slider>().CurrentValue)
                 {
                     Laneclear();
-                    
+
                 }
             }
-              if (Orbwalker.ActiveModesFlags == Orbwalker.ActiveModes.JungleClear)
-              {
-                  var minion = (EntityManager.GetJungleMonsters(_player.Position.To2D(), 1000f));
+            if (Orbwalker.ActiveModesFlags == Orbwalker.ActiveModes.JungleClear)
+            {
+                var minion = (EntityManager.GetJungleMonsters(_player.Position.To2D(), 1000f));
 
-                  var useW = _junglemenu["UseWJ"].Cast<CheckBox>().CurrentValue;
-                  if (minion != null)
-                  {
-                      Chat.Print("junlge 3");
-                      if (useW && _w.IsReady())
-                      {
-                          _w.Cast();
-                      }
-                  }
-               Chat.Print("junlge 1");
-               if (_player.ManaPercent > _junglemenu["junglemana"].Cast<Slider>().CurrentValue)
-               {
-                   JungleClear();
-                   Chat.Print("junlge 2");
-               }
-              }
+                var useW = _junglemenu["UseWJ"].Cast<CheckBox>().CurrentValue;
+                if (minion != null)
+                {
+                    if (useW && _w.IsReady())
+                    {
+                        _w.Cast();
+                    }
+                }
+
+                if (_player.ManaPercent > _junglemenu["junglemana"].Cast<Slider>().CurrentValue)
+                {
+                    JungleClear();
+
+                }
+            }
+            KillSteal();
         }
-
         private static void Combo()
         {
             var useQ = _combo["UseQC"].Cast<CheckBox>().CurrentValue;
