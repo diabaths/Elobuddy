@@ -25,7 +25,7 @@ namespace D_Diana
         private static Obj_SpellMissile _qpos;
 
         private static int _lastTick;
-
+        private static int _lastTickcombo;
         private static bool _qcreated = false;
 
         private static Menu _config, _combo, _harass, _farmmenu, _junglemenu, _miscmenu, _drawmenu, _smitemenu;
@@ -133,7 +133,7 @@ namespace D_Diana
             _miscmenu = _config.AddSubMenu("Misc", "Misc");
             _miscmenu.AddLabel("Misc Settings");
             _miscmenu.Add("AutoShield", new CheckBox("Auto W"));
-            _miscmenu.Add("Shieldper", new Slider("Use W if HP < %", 35, 1, 100));
+           // _miscmenu.Add("Shieldper", new Slider("Use W if HP < %", 35, 1, 100));
             _miscmenu.Add("Inter_E", new CheckBox("Use E to Interrupter"));
             _miscmenu.Add("Gap_W", new CheckBox("Use W to GapClosers"));
             _miscmenu.Add("UseQKs", new CheckBox("Use Q KillSteal"));
@@ -155,7 +155,7 @@ namespace D_Diana
             _drawmenu.Add("ShowPassive", new CheckBox("Draw Passive Stage"));
 
 
-            Chat.Print("<font color='#881df2'>D-KogMaw by Diabaths</font> Loaded.");
+            Chat.Print("<font color='#881df2'>D-Diana by Diabaths</font> Loaded.");
             Game.OnTick += Game_OnTick;
             Drawing.OnDraw += Drawing_OnDraw;
             GameObject.OnCreate += OnCreate;
@@ -169,11 +169,7 @@ namespace D_Diana
 
         private static void Game_OnTick(EventArgs args)
         {
-            if (_miscmenu["AutoShield"].Cast<CheckBox>().CurrentValue)
-            {
-                AutoW();
-            }
-            if (Orbwalker.ActiveModesFlags == Orbwalker.ActiveModes.Combo)
+           if (Orbwalker.ActiveModesFlags == Orbwalker.ActiveModes.Combo)
 
             {
                 Combomode();
@@ -212,10 +208,10 @@ namespace D_Diana
             {
               Tragic();
             }
-            killsteal();
+            Killsteal();
         }
 
-        private static void killsteal()
+        private static void Killsteal()
         {
            
                 var target = TargetSelector.GetTarget(_q.Range, DamageType.Magical);
@@ -398,16 +394,7 @@ namespace D_Diana
             return hero.IsVisible
                    && ObjectManager.Get<Obj_SpawnPoint>().Any(sp => hero.Distance(sp.Position) < fountainRange);
         }
-        private static void AutoW()
-        {
-            if (_player.HasBuff("Recall") || _player.InFountain()) return;
-            if (_w.IsReady() &&
-                _player.HealthPercent <=  _miscmenu["Shieldper"].Cast<Slider>().CurrentValue)
-            {
-                _w.Cast();
-            }
-
-        }
+        
         private static void Combomode()
         {
             var comboswitch = _combo["ComboPrio"].DisplayName;
@@ -509,7 +496,7 @@ namespace D_Diana
 
         private static void Combo()
         {
-            var changetime = Environment.TickCount - _lastTick;
+            var changetime = Environment.TickCount - _lastTickcombo;
             var target = TargetSelector.GetTarget(_q.Range, DamageType.Magical);
             var ignitecombo = _combo["UseIgnitecombo"].Cast<CheckBox>().CurrentValue;
             var _ignite = Player.Spells.FirstOrDefault(spell => spell.Name.ToLower().Contains("summonerheal"));
@@ -528,11 +515,11 @@ namespace D_Diana
                 if (predQ.HitChance >= HitChance.High)
                     _q.Cast(predQ.CastPosition);
             }
-            if (changetime>=1500&&target.IsValidTarget(_r.Range) && _combo["UseRCombo"].Cast<CheckBox>().CurrentValue && _r.IsReady() &&
-                ((_qcreated == true) || target.HasBuff("dianamoonlight")))
+            if (changetime>=3000&&target.IsValidTarget(_r.Range) && _combo["UseRCombo"].Cast<CheckBox>().CurrentValue && _r.IsReady() &&
+                (_qcreated == true || target.HasBuff("dianamoonlight")))
             {
                 _r.Cast(target);
-                _lastTick = Environment.TickCount;
+                _lastTickcombo = Environment.TickCount;
             }
             if (target.IsValidTarget(_w.Range) && _combo["UseWCombo"].Cast<CheckBox>().CurrentValue && _w.IsReady() &&
                 !_q.IsReady())
@@ -615,7 +602,7 @@ namespace D_Diana
                             _w.Cast();
                 }
                 if (_r.IsReady() && useR && mobs.HasBuff("dianamoonlight"))
-                {
+                {if (!mobs.HasBuff("dianamoonlight")) return;
                    if (mobs.Distance(_player) > _player.GetAutoAttackRange(mobs) &&
                             mobs.Health < 0.75 * _player.GetSpellDamage(mobs, SpellSlot.R))
                             _r.Cast(mobs);
@@ -636,14 +623,14 @@ namespace D_Diana
                 if (useQ && _q.IsReady() && minion.IsValidTarget(_q.Range))
                 {
                     _q.Cast(minion);
-                    _lastTick = Environment.TickCount;
-                }
+                  }
                 if (_w.IsReady() && useW && minion.IsValidTarget(_w.Range))
                 {
                     _w.Cast();
                 }
-                if (changetime >= 1500&&_r.IsReady() && useR && minion.HasBuff("dianamoonlight")&& !mininions.Any(name => minion.Name.Contains("Mini")))
+                if (changetime >= 3000&&_r.IsReady() && useR && minion.HasBuff("dianamoonlight")&& !mininions.Any(name => minion.Name.Contains("Mini")))
                 {
+                    if (!minion.HasBuff("dianamoonlight")) return;
                     _r.Cast(minion);
                     _lastTick = Environment.TickCount;
                 }
@@ -660,12 +647,23 @@ namespace D_Diana
 
         private static void OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            var spell = args.SData;
-            if (!sender.IsMe)
+            var autoW = _miscmenu["AutoShield"].Cast<CheckBox>().CurrentValue;
+            try
             {
-                return;
+                if (sender.IsMe || sender == null || !sender.IsEnemy || sender.IsMinion || _w.Level < 1 ||
+                    !sender.IsValid) return;
+                if (sender.Distance(_player.Position) > 1100) return;
+                
+                if (args.Target.IsMe && _w.IsReady() && sender.IsEnemy && autoW)
+                    _w.Cast();
             }
-            if (spell.Name.ToLower().Contains("dianaarc") || spell.Name.ToLower().Contains("dianateleport"))
+            catch (Exception)
+
+            {
+            }
+            var spell = args.SData;
+            if (sender.IsMe &&
+                (spell.Name.ToLower().Contains("dianaarc") || spell.Name.ToLower().Contains("dianateleport")))
             {
                 Core.DelayAction(Orbwalker.ResetAutoAttack, 250);
             }
