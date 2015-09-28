@@ -29,7 +29,7 @@ namespace D_Kogmaw
         private static Spell.Skillshot _r;
 
         private static Menu _miscmenu, _drawmenu, _combo, _config, _harass, _farmmenu, _junglemenu;
-       
+
         private static void Main(string[] args)
         {
             Loading.OnLoadingComplete += Loading_OnLoadingComplete;
@@ -37,7 +37,7 @@ namespace D_Kogmaw
 
         private static void Loading_OnLoadingComplete(EventArgs args)
         {
-           //TargetSelector.Init();
+            //TargetSelector.Init();
             Bootstrap.Init(null);
 
             if (Player.Instance.ChampionName != "KogMaw")
@@ -47,7 +47,7 @@ namespace D_Kogmaw
             _q.AllowedCollisionCount = 0x0;
             _w = new Spell.Active(SpellSlot.W, (uint) (760 + 20*_player.Spellbook.GetSpell(SpellSlot.W).Level));
             _e = new Spell.Skillshot(SpellSlot.E, 1300, SkillShotType.Linear, 500, 1200, 120);
-                        _r = new Spell.Skillshot(SpellSlot.R, (uint) (800 + 300*_player.Spellbook.GetSpell(SpellSlot.R).Level),
+            _r = new Spell.Skillshot(SpellSlot.R, (uint) (800 + 300*_player.Spellbook.GetSpell(SpellSlot.R).Level),
                 SkillShotType.Circular, 1200, Int32.MaxValue, 120);
 
             //D kogmaw
@@ -94,12 +94,12 @@ namespace D_Kogmaw
             _farmmenu.Add("UseQL", new CheckBox("Use Q"));
             _farmmenu.Add("UseWL", new CheckBox("Use W"));
             _farmmenu.Add("UseEL", new CheckBox("Use E"));
-           _farmmenu.Add("UseRL", new CheckBox("Use R"));
+            _farmmenu.Add("UseRL", new CheckBox("Use R"));
             _farmmenu.Add("RlimL", new Slider("R Max Stuck", 1, 1, 5));
             _farmmenu.Add("Lanemana", new Slider("Minimum Mana", 35, 1, 100));
             _farmmenu.AddSeparator();
 
-           //Misc
+            //Misc
             _miscmenu = _config.AddSubMenu("Misc", "Misc");
             _miscmenu.Add("UseRM", new CheckBox("Use R KillSteal"));
             //_miscmenu.Add("Gap_E", new CheckBox("GapClosers E"));
@@ -136,13 +136,11 @@ namespace D_Kogmaw
                 var eTarget = TargetSelector.GetTarget(_e.Range, DamageType.Physical);
                 if (useW && _w.IsReady() && eTarget.IsValidTarget(_e.Range))
                 {
-                    Chat.Print("harass 2");
                     _w.Cast();
                 }
                 if (_player.ManaPercent >
                     _harass["Harrasmana"].Cast<Slider>().CurrentValue)
                 {
-                    Chat.Print("harass 3");
                     Harass();
                 }
             }
@@ -186,6 +184,7 @@ namespace D_Kogmaw
             }
             KillSteal();
         }
+
         private static void Combo()
         {
             var useQ = _combo["UseQC"].Cast<CheckBox>().CurrentValue;
@@ -193,7 +192,7 @@ namespace D_Kogmaw
             var useE = _combo["UseEC"].Cast<CheckBox>().CurrentValue;
             var useR = _combo["UseRC"].Cast<CheckBox>().CurrentValue;
             var rLim = _combo["RlimC"].Cast<Slider>().CurrentValue;
-          
+
             if (useW)
             {
                 var tw = TargetSelector.GetTarget(_e.Range, DamageType.Magical);
@@ -225,7 +224,7 @@ namespace D_Kogmaw
             }
         }
 
-       
+
         private static void Harass()
         {
             var useQ = _harass["UseQH"].Cast<CheckBox>().CurrentValue;
@@ -250,7 +249,7 @@ namespace D_Kogmaw
             if (useR && _r.IsReady() && GetBuffStacks() < rLimH)
             {
                 var t = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
-                if (t.IsValidTarget(_r.Range)  && _r.GetPrediction(t).HitChance >= HitChance.High)
+                if (t.IsValidTarget(_r.Range) && _r.GetPrediction(t).HitChance >= HitChance.High)
                     _r.Cast(t);
             }
         }
@@ -258,7 +257,7 @@ namespace D_Kogmaw
         private static void Laneclear()
         {
             var minion = EntityManager.GetLaneMinions(EntityManager.UnitTeam.Enemy, _player.Position.To2D(),
-                    _e.Range);
+                _e.Range);
             var useQ = _farmmenu["UseQL"].Cast<CheckBox>().CurrentValue;
             var useE = _farmmenu["UseEL"].Cast<CheckBox>().CurrentValue;
             var useR = _farmmenu["UseRL"].Cast<CheckBox>().CurrentValue;
@@ -283,29 +282,27 @@ namespace D_Kogmaw
                     {
                         _e.Cast(mobs);
                     }
-                    else 
-                            if (mobs.Distance(_player) > _player.GetAutoAttackRange(mobs) &&
-                                mobs.Health < 0.75*_player.GetSpellDamage(mobs, SpellSlot.E))
-                                _e.Cast(mobs);
+                    else if (mobs.Distance(_player) > _player.GetAutoAttackRange(mobs) &&
+                             mobs.Health < 0.75*_player.GetSpellDamage(mobs, SpellSlot.E))
+                        _e.Cast(mobs);
                 }
                 if (_r.IsReady() && useR && GetBuffStacks() < rLimL)
                 {
-                   
-                   
+
+
                     if (minion.Count >= 3)
                     {
                         _r.Cast(mobs);
                     }
 
-                    else
-                        if (mobs.Distance(_player) > _player.GetAutoAttackRange(mobs) &&
-                            mobs.Health < 0.75 * _player.GetSpellDamage(mobs, SpellSlot.R))
-                            _r.Cast(mobs);
+                    else if (mobs.Distance(_player) > _player.GetAutoAttackRange(mobs) &&
+                             mobs.Health < 0.75*_player.GetSpellDamage(mobs, SpellSlot.R))
+                        _r.Cast(mobs);
                 }
             }
         }
 
-       
+
         private static void JungleClear()
         {
             var mininions = EntityManager.GetJungleMonsters(_player.Position.To2D(), _e.Range);
@@ -316,12 +313,12 @@ namespace D_Kogmaw
 
             foreach (var minion in mininions.Where(m => m.IsValid))
             {
-                
-                if (useQ && _q.IsReady()&& minion.IsValidTarget(_q.Range))
+
+                if (useQ && _q.IsReady() && minion.IsValidTarget(_q.Range))
                 {
                     _q.Cast(minion);
                 }
-                if (_e.IsReady() && useE &&minion.IsValidTarget(_e.Range))
+                if (_e.IsReady() && useE && minion.IsValidTarget(_e.Range))
                 {
                     _e.Cast(minion);
                 }
@@ -329,8 +326,8 @@ namespace D_Kogmaw
                 {
                     _r.Cast(minion);
                 }
-            
-        }
+
+            }
         }
 
         private static int GetBuffStacks()
@@ -348,7 +345,6 @@ namespace D_Kogmaw
             }
         }
 
-
         private static void KillSteal()
         {
             foreach (
@@ -361,42 +357,56 @@ namespace D_Kogmaw
                 }
             }
         }
-        public static float RDamage(Obj_AI_Base target)
+
+        private static float RDamage(Obj_AI_Base target)
         {
             return _player.CalculateDamageOnUnit(target, DamageType.Magical,
-                (float)(new[] { 80, 120, 160 }[Program._r.Level] + 1.3 * _player.FlatMagicDamageMod+1.5*_player.FlatPhysicalDamageMod));
+                (float)
+                    (new[] {80, 120, 160}[Program._r.Level] + 1.3*_player.FlatMagicDamageMod +
+                     1.5*_player.FlatPhysicalDamageMod));
         }
+
         private static void Drawing_OnDraw(EventArgs args)
         {
             var harass = _harass["harasstoggle"].Cast<KeyBind>().CurrentValue;
-           
+
             if (_drawmenu["Drawharass"].Cast<CheckBox>().CurrentValue)
             {
                 if (harass)
                 {
-                    Drawing.DrawText(Drawing.Width * 0.02f, Drawing.Height * 0.92f, Color.GreenYellow,
+                    Drawing.DrawText(Drawing.Width*0.02f, Drawing.Height*0.92f, Color.GreenYellow,
                         "Auto harass Enabled");
                 }
                 else
-                    Drawing.DrawText(Drawing.Width * 0.02f, Drawing.Height * 0.92f, Color.OrangeRed,
+                    Drawing.DrawText(Drawing.Width*0.02f, Drawing.Height*0.92f, Color.OrangeRed,
                         "Auto harass Disabled");
             }
-           
+
             if (_drawmenu["DrawQ"].Cast<CheckBox>().CurrentValue && _q.Level > 0)
             {
-                new Circle() { Color = Color.GreenYellow, BorderWidth = 1, Radius = _q.Range }.Draw(_player.Position);
+                new Circle() {Color = Color.GreenYellow, BorderWidth = 1, Radius = _q.Range}.Draw(_player.Position);
             }
             if (_drawmenu["DrawW"].Cast<CheckBox>().CurrentValue && _w.Level > 0)
             {
-                new Circle() { Color = Color.GreenYellow, BorderWidth = 1, Radius = (uint)(760 + 20 * _player.Spellbook.GetSpell(SpellSlot.W).Level) }.Draw(_player.Position);
+                new Circle()
+                {
+                    Color = Color.GreenYellow,
+                    BorderWidth = 1,
+                    Radius = (uint) (760 + 20*_player.Spellbook.GetSpell(SpellSlot.W).Level)
+                }.Draw(_player.Position);
             }
             if (_drawmenu["DrawE"].Cast<CheckBox>().CurrentValue && _e.Level > 0)
             {
-                new Circle() { Color = Color.GreenYellow, BorderWidth = 1, Radius = _e.Range }.Draw(_player.Position);
+                new Circle() {Color = Color.GreenYellow, BorderWidth = 1, Radius = _e.Range}.Draw(_player.Position);
             }
             if (_drawmenu["DrawR"].Cast<CheckBox>().CurrentValue && _r.Level > 0)
             {
-                new Circle() { Color = Color.GreenYellow, BorderWidth = 1, Radius = (uint) (800 + 300*_player.Spellbook.GetSpell(SpellSlot.R).Level) }.Draw(_player.Position);
+                new Circle()
+                {
+                    Color = Color.GreenYellow,
+                    BorderWidth = 1,
+                    Radius = (uint) (800 + 300*_player.Spellbook.GetSpell(SpellSlot.R).Level)
+                }.Draw(_player.Position);
             }
         }
     }
