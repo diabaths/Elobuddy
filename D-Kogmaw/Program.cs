@@ -27,6 +27,8 @@ namespace D_Kogmaw
         private static Spell.Active _w;
         private static Spell.Skillshot _e;
         private static Spell.Skillshot _r;
+        private static readonly Spell.Targeted Ignite =
+           new Spell.Targeted(_player.GetSpellSlotFromName("summonerdot"), 600);
 
         private static Menu _miscmenu, _drawmenu, _combo, _config, _harass, _farmmenu, _junglemenu;
 
@@ -59,6 +61,7 @@ namespace D_Kogmaw
             //Combo
             _combo = _config.AddSubMenu("Combo", "Combo");
             _combo.AddLabel("Combo Mode Settings");
+            _combo.Add("UseIgnitecombo", new CheckBox("Use Ignite"));
             _combo.Add("UseQC", new CheckBox("Use Q"));
             _combo.Add("UseWC", new CheckBox("Use W"));
             _combo.Add("UseEC", new CheckBox("Use E"));
@@ -184,7 +187,29 @@ namespace D_Kogmaw
             }
             KillSteal();
         }
+        private static float ComboDamage(Obj_AI_Base hero)
+        {
+            var dmg = 0d;
 
+            if (_q.IsReady())
+                dmg += _player.GetSpellDamage(hero, SpellSlot.Q);
+            if (_w.IsReady())
+                dmg += _player.GetSpellDamage(hero, SpellSlot.W);
+            if (_e.IsReady())
+                dmg += _player.GetSpellDamage(hero, SpellSlot.E);
+            if (_r.IsReady())
+                dmg += _player.GetSpellDamage(hero, SpellSlot.R) * 3;
+            if (Ignite.IsReady()&& Ignite !=null)
+            {
+                dmg += _player.GetSummonerSpellDamage(hero, DamageLibrary.SummonerSpells.Ignite);
+            }
+           if (ObjectManager.Player.HasBuff("LichBane"))
+            {
+                dmg += _player.BaseAttackDamage * 0.75 + _player.FlatMagicDamageMod * 0.5;
+            }
+            dmg += _player.GetAutoAttackDamage(hero, true) * 2;
+            return (float)dmg;
+        }
         private static void Combo()
         {
             var useQ = _combo["UseQC"].Cast<CheckBox>().CurrentValue;
@@ -192,7 +217,18 @@ namespace D_Kogmaw
             var useE = _combo["UseEC"].Cast<CheckBox>().CurrentValue;
             var useR = _combo["UseRC"].Cast<CheckBox>().CurrentValue;
             var rLim = _combo["RlimC"].Cast<Slider>().CurrentValue;
-
+            var ignitecombo = _combo["UseIgnitecombo"].Cast<CheckBox>().CurrentValue;
+            if (ignitecombo)
+            {
+                var ti = TargetSelector.GetTarget(Ignite.Range, DamageType.Magical);
+                if (ti.IsValidTarget(Ignite.Range)  && Ignite.IsReady() && Ignite != null)
+                {
+                    if (ti.Health <= ComboDamage(ti))
+                    {
+                        Ignite.Cast(ti);
+                    }
+                }
+            }
             if (useW)
             {
                 var tw = TargetSelector.GetTarget(_e.Range, DamageType.Magical);
