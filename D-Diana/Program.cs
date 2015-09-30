@@ -563,7 +563,7 @@ namespace D_Diana
             {
                 _w.Cast();
             }
-            if (IsUnderTurret(target.ServerPosition) && target.IsValidTarget(_r.Range) && _harass["UseRHarass"].Cast<CheckBox>().CurrentValue && _r.IsReady() && target.HasBuff("dianamoonlight"))
+            if (!IsUnderTurret(target.ServerPosition) && target.IsValidTarget(_r.Range) && _harass["UseRHarass"].Cast<CheckBox>().CurrentValue && _r.IsReady() && (_qcreated == true || target.HasBuff("dianamoonlight")))
             {
                 _r.Cast(target);
             }
@@ -630,7 +630,6 @@ namespace D_Diana
                 }
                 if (changetime >= 3000&&_r.IsReady() && useR && minion.HasBuff("dianamoonlight")&& !mininions.Any(name => minion.Name.Contains("Mini")))
                 {
-                    if (!minion.HasBuff("dianamoonlight")) return;
                     _r.Cast(minion);
                     _lastTick = Environment.TickCount;
                 }
@@ -697,12 +696,12 @@ namespace D_Diana
             }
             if (_drawmenu["Drawsmite"].Cast<CheckBox>().CurrentValue)
             {
-                if (_smitemenu["Usesmite"].Cast<KeyBind>().CurrentValue)
+                if (_smitemenu["Usesmite"].Cast<KeyBind>().CurrentValue && _smite !=null)
                 {
                     Drawing.DrawText(Drawing.Width * 0.02f, Drawing.Height * 0.88f, System.Drawing.Color.GreenYellow,
                         "Smite Jungle On");
                 }
-                else
+                else if( _smite !=null)
                     Drawing.DrawText(Drawing.Width * 0.02f, Drawing.Height * 0.88f, System.Drawing.Color.OrangeRed,
                         "Smite Jungle Off");
                 if (SmiteBlue.Any(i => Item.HasItem(i)) || SmiteRed.Any(i => Item.HasItem(i)))
