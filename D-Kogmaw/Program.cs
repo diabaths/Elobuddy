@@ -150,7 +150,7 @@ namespace D_Kogmaw
             if (Orbwalker.ActiveModesFlags == Orbwalker.ActiveModes.LaneClear)
             {
                 var minion =
-                    (EntityManager.GetLaneMinions(EntityManager.UnitTeam.Enemy, _player.Position.To2D(), 1000f));
+                    (EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, _player.Position, 1000f));
 
                 var useW = _farmmenu["UseWL"].Cast<CheckBox>().CurrentValue;
                 if (minion != null)
@@ -168,7 +168,7 @@ namespace D_Kogmaw
             }
             if (Orbwalker.ActiveModesFlags == Orbwalker.ActiveModes.JungleClear)
             {
-                var minion = (EntityManager.GetJungleMonsters(_player.Position.To2D(), 1000f));
+                var minion = (EntityManager.MinionsAndMonsters.GetJungleMonsters(_player.Position, 1000f));
 
                 var useW = _junglemenu["UseWJ"].Cast<CheckBox>().CurrentValue;
                 if (minion != null)
@@ -292,8 +292,8 @@ namespace D_Kogmaw
 
         private static void Laneclear()
         {
-            var minion = EntityManager.GetLaneMinions(EntityManager.UnitTeam.Enemy, _player.Position.To2D(),
-                _e.Range);
+            var minion = EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, _player.Position,
+               _e.Range);
             var useQ = _farmmenu["UseQL"].Cast<CheckBox>().CurrentValue;
             var useE = _farmmenu["UseEL"].Cast<CheckBox>().CurrentValue;
             var useR = _farmmenu["UseRL"].Cast<CheckBox>().CurrentValue;
@@ -303,7 +303,7 @@ namespace D_Kogmaw
             {
                 if (_q.IsReady() && useQ)
                 {
-                    if (minion.Count >= 3)
+                    if (minion.Count() >= 3)
                     {
                         _q.Cast(mobs);
                     }
@@ -314,7 +314,7 @@ namespace D_Kogmaw
                 }
                 if (_e.IsReady() && useE)
                 {
-                    if (minion.Count >= 3)
+                    if (minion.Count() >= 3)
                     {
                         _e.Cast(mobs);
                     }
@@ -326,7 +326,7 @@ namespace D_Kogmaw
                 {
 
 
-                    if (minion.Count >= 3)
+                    if (minion.Count() >= 3)
                     {
                         _r.Cast(mobs);
                     }
@@ -341,7 +341,7 @@ namespace D_Kogmaw
 
         private static void JungleClear()
         {
-            var mininions = EntityManager.GetJungleMonsters(_player.Position.To2D(), _e.Range);
+            var mininions = EntityManager.MinionsAndMonsters.GetJungleMonsters(_player.Position, _e.Range);
             var useQ = _junglemenu["UseQJ"].Cast<CheckBox>().CurrentValue;
             var useE = _junglemenu["UseEJ"].Cast<CheckBox>().CurrentValue;
             var useR = _junglemenu["UseRJ"].Cast<CheckBox>().CurrentValue;

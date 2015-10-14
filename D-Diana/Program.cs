@@ -26,6 +26,7 @@ namespace D_Diana
 
         private static int _lastTick;
         private static int _lastTickcombo;
+        private static int _lastTickharass;
         private static bool _qcreated = false;
 
         private static Menu _config, _combo, _harass, _farmmenu, _junglemenu, _miscmenu, _drawmenu, _smitemenu;
@@ -57,7 +58,8 @@ namespace D_Diana
 
         private static void Loading_OnLoadingComplete(EventArgs args)
         {
-            Bootstrap.Init(null);
+           
+           Bootstrap.Init(null);
             if (Player.Instance.ChampionName != ChampionName)
                 return;
             _q = new Spell.Skillshot(SpellSlot.Q, 830, SkillShotType.Linear, 350, 1800, 190);
@@ -247,27 +249,31 @@ namespace D_Diana
                 }
             }
         }
+
         private static void Tragic()
         {
-           var allMinionsQ = EntityManager.GetLaneMinions(EntityManager.UnitTeam.Enemy, _player.Position.To2D(),
-                    _q.Range);
-            var mobs = EntityManager.GetJungleMonsters(_player.Position.To2D(), _q.Range);
-            Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
-           if (_q.IsReady()) _q.Cast(Game.CursorPos);
-            if (_r.IsReady())
-            {
-                if (mobs.Count > 0)
-                {
-                    var mob = mobs[0];
-
-                    _r.Cast(mob);
-                }
-                else if (allMinionsQ.Count >= 1)
-                {
-                    _r.Cast(allMinionsQ[0]);
-                }
-            }
+            /* var allMinionsQ = EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy,
+                 _player.Position,
+                 _q.Range);
+             var mobs = EntityManager.MinionsAndMonsters.GetJungleMonsters(_player.Position, _q.Range);
+             Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+             if (_q.IsReady()) _q.Cast(Game.CursorPos);
+             if (_r.IsReady())
+             {
+                 foreach (var minion in mobs.Where(m => m.IsValid))
+                 {
+                     if (mobs.Count() > 0)
+                     {
+                         _r.Cast(minion);
+                     }
+                     else if (allMinionsQ.Count() >= 1)
+                     {
+                         _r.Cast(allMinionsQ);
+                     }
+                 }
+            }*/
         }
+
         private static void Smiteontarget(Obj_AI_Base hero)
         {
             var smitered = Player.Spells.FirstOrDefault(spell => spell.Name.ToLower().Contains("s5_summonersmiteduel"));
@@ -357,7 +363,7 @@ namespace D_Diana
                 "SRU_Baron"
             };
 
-            var minions = EntityManager.GetJungleMonsters(_player.Position.To2D(), 1000);
+            var minions = EntityManager.MinionsAndMonsters.GetJungleMonsters(_player.Position, 1000);
             if (minions != null)
             {
                 int smiteDmg = GetSmiteDmg();
@@ -384,9 +390,10 @@ namespace D_Diana
                 }
             }
         }
+       
         public static bool IsUnderTurret(Vector3 position)
         {
-            return ObjectManager.Get<Obj_AI_Turret>().Any(turret => turret.IsValidTarget(950) && turret.IsEnemy);
+            return ObjectManager.Get<Obj_AI_Turret>().Any(turret => turret.IsValidTarget(_r.Range) && turret.IsEnemy);
         }
         private static bool InFountain(this AIHeroClient hero)
         {
@@ -552,7 +559,7 @@ namespace D_Diana
         private static void Harass()
         {
             var target = TargetSelector.GetTarget(_q.Range,DamageType.Magical);
-
+            var changetimeh = Environment.TickCount - _lastTickharass;
             if (target.IsValidTarget(_q.Range) && _harass["UseQHarass"].Cast<CheckBox>().CurrentValue && _q.IsReady())
             {
                 var predQ = _q.GetPrediction(target);
@@ -563,14 +570,15 @@ namespace D_Diana
             {
                 _w.Cast();
             }
-            if (!IsUnderTurret(target.ServerPosition) && target.IsValidTarget(_r.Range) && _harass["UseRHarass"].Cast<CheckBox>().CurrentValue && _r.IsReady() && (_qcreated == true || target.HasBuff("dianamoonlight")))
+            if (changetimeh>=3000&&/*!IsUnderTurret(target.ServerPosition) &&*/ target.IsValidTarget(_r.Range) && _harass["UseRHarass"].Cast<CheckBox>().CurrentValue && _r.IsReady() && (_qcreated == true || target.HasBuff("dianamoonlight")))
             {
                 _r.Cast(target);
+                _lastTickharass = Environment.TickCount;
             }
         }
         private static void Farm()
         {
-            var minion = EntityManager.GetLaneMinions(EntityManager.UnitTeam.Enemy, _player.Position.To2D(),
+            var minion = EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, _player.Position,
                     _q.Range);
           
             var useQ = _farmmenu["UseQLane"].Cast<CheckBox>().CurrentValue;
@@ -581,7 +589,7 @@ namespace D_Diana
             {
                 if (_q.IsReady() && useQ)
                 {
-                    if (minion.Count >= 3)
+                    if (minion.Count() >= 3)
                     {
                         _q.Cast(mobs);
                     }
@@ -592,7 +600,7 @@ namespace D_Diana
                 }
                 if (_w.IsReady() && useW&& mobs.IsValidTarget(_w.Range))
                 {
-                    if (minion.Count >= 3)
+                    if (minion.Count() >= 3)
                     {
                         _w.Cast();
                     }
@@ -611,7 +619,7 @@ namespace D_Diana
         }
         private static void JungleClear()
         {
-            var mininions = EntityManager.GetJungleMonsters(_player.Position.To2D(), _q.Range);
+            var mininions = EntityManager.MinionsAndMonsters.GetJungleMonsters(_player.Position, _q.Range);
             var useQ = _junglemenu["UseQJungle"].Cast<CheckBox>().CurrentValue;
             var useW = _junglemenu["UseWJungle"].Cast<CheckBox>().CurrentValue;
             var useR = _junglemenu["UseRJungle"].Cast<CheckBox>().CurrentValue;
