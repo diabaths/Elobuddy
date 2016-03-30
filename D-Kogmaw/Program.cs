@@ -19,16 +19,25 @@ namespace D_Kogmaw
 
         private static AIHeroClient _player
         {
-            get { return ObjectManager.Player; }
+            get
+            {
+                return ObjectManager.Player;
+            }
         }
 
         public static AttackableUnit AfterAttackTarget { get; private set; }
+
         private static Spell.Skillshot _q;
+
         private static Spell.Active _w;
+
         private static Spell.Skillshot _e;
+
         private static Spell.Skillshot _r;
-        private static readonly Spell.Targeted Ignite =
-           new Spell.Targeted(_player.GetSpellSlotFromName("summonerdot"), 600);
+
+        private static readonly Spell.Targeted Ignite = new Spell.Targeted(
+            _player.GetSpellSlotFromName("summonerdot"),
+            600);
 
         private static Menu _miscmenu, _drawmenu, _combo, _config, _harass, _farmmenu, _junglemenu;
 
@@ -42,15 +51,19 @@ namespace D_Kogmaw
             //TargetSelector.Init();
             Bootstrap.Init(null);
 
-            if (Player.Instance.ChampionName != "KogMaw")
-                return;
+            if (Player.Instance.ChampionName != "KogMaw") return;
 
             _q = new Spell.Skillshot(SpellSlot.Q, 1100, SkillShotType.Linear, 500, 1200, 70);
             _q.AllowedCollisionCount = 0x0;
-            _w = new Spell.Active(SpellSlot.W, (uint) (760 + 20*_player.Spellbook.GetSpell(SpellSlot.W).Level));
+            _w = new Spell.Active(SpellSlot.W, (uint)(760 + 20 * _player.Spellbook.GetSpell(SpellSlot.W).Level));
             _e = new Spell.Skillshot(SpellSlot.E, 1300, SkillShotType.Linear, 500, 1200, 120);
-            _r = new Spell.Skillshot(SpellSlot.R, (uint) (800 + 300*_player.Spellbook.GetSpell(SpellSlot.R).Level),
-                SkillShotType.Circular, 1200, Int32.MaxValue, 120);
+            _r = new Spell.Skillshot(
+                SpellSlot.R,
+                (uint)(800 + 300 * _player.Spellbook.GetSpell(SpellSlot.R).Level),
+                SkillShotType.Circular,
+                1200,
+                Int32.MaxValue,
+                120);
 
             //D kogmaw
             _config = MainMenu.AddMenu("D-KogMaw", "D-KogMaw");
@@ -141,8 +154,7 @@ namespace D_Kogmaw
                 {
                     _w.Cast();
                 }
-                if (_player.ManaPercent >
-                    _harass["Harrasmana"].Cast<Slider>().CurrentValue)
+                if (_player.ManaPercent > _harass["Harrasmana"].Cast<Slider>().CurrentValue)
                 {
                     Harass();
                 }
@@ -150,7 +162,10 @@ namespace D_Kogmaw
             if (Orbwalker.ActiveModesFlags == Orbwalker.ActiveModes.LaneClear)
             {
                 var minion =
-                    (EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, _player.Position, 1000f));
+                    (EntityManager.MinionsAndMonsters.GetLaneMinions(
+                        EntityManager.UnitTeam.Enemy,
+                        _player.Position,
+                        1000f));
 
                 var useW = _farmmenu["UseWL"].Cast<CheckBox>().CurrentValue;
                 if (minion != null)
@@ -187,29 +202,27 @@ namespace D_Kogmaw
             }
             KillSteal();
         }
+
         private static float ComboDamage(Obj_AI_Base hero)
         {
             var dmg = 0d;
 
-            if (_q.IsReady())
-                dmg += _player.GetSpellDamage(hero, SpellSlot.Q);
-            if (_w.IsReady())
-                dmg += _player.GetSpellDamage(hero, SpellSlot.W);
-            if (_e.IsReady())
-                dmg += _player.GetSpellDamage(hero, SpellSlot.E);
-            if (_r.IsReady())
-                dmg += _player.GetSpellDamage(hero, SpellSlot.R) * 3;
-            if (Ignite.IsReady()&& Ignite !=null)
+            if (_q.IsReady()) dmg += _player.GetSpellDamage(hero, SpellSlot.Q);
+            if (_w.IsReady()) dmg += _player.GetSpellDamage(hero, SpellSlot.W);
+            if (_e.IsReady()) dmg += _player.GetSpellDamage(hero, SpellSlot.E);
+            if (_r.IsReady()) dmg += _player.GetSpellDamage(hero, SpellSlot.R) * 3;
+            if (Ignite.IsReady() && Ignite != null)
             {
                 dmg += _player.GetSummonerSpellDamage(hero, DamageLibrary.SummonerSpells.Ignite);
             }
-           if (ObjectManager.Player.HasBuff("LichBane"))
+            if (ObjectManager.Player.HasBuff("LichBane"))
             {
                 dmg += _player.BaseAttackDamage * 0.75 + _player.FlatMagicDamageMod * 0.5;
             }
             dmg += _player.GetAutoAttackDamage(hero, true) * 2;
             return (float)dmg;
         }
+
         private static void Combo()
         {
             var useQ = _combo["UseQC"].Cast<CheckBox>().CurrentValue;
@@ -221,7 +234,7 @@ namespace D_Kogmaw
             if (ignitecombo)
             {
                 var ti = TargetSelector.GetTarget(Ignite.Range, DamageType.Magical);
-                if (ti.IsValidTarget(Ignite.Range)  && Ignite.IsReady() && Ignite != null)
+                if (ti.IsValidTarget(Ignite.Range) && Ignite.IsReady() && Ignite != null)
                 {
                     if (ti.Health <= ComboDamage(ti))
                     {
@@ -241,22 +254,19 @@ namespace D_Kogmaw
             {
                 var t = TargetSelector.GetTarget(_q.Range, DamageType.Magical);
                 var prediction = _q.GetPrediction(t);
-                if (t.IsValidTarget(_q.Range) && prediction.HitChance >= HitChance.High)
-                    _q.Cast(t);
+                if (t.IsValidTarget(_q.Range) && prediction.HitChance >= HitChance.High) _q.Cast(t);
             }
             if (useE && _e.IsReady())
             {
                 var t = TargetSelector.GetTarget(_e.Range, DamageType.Magical);
                 var predictione = _e.GetPrediction(t);
-                if (t.IsValidTarget(_e.Range) && predictione.HitChance >= HitChance.High)
-                    _e.Cast(t);
+                if (t.IsValidTarget(_e.Range) && predictione.HitChance >= HitChance.High) _e.Cast(t);
             }
             if (useR && _r.IsReady() && GetBuffStacks() < rLim)
             {
                 var t = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
                 var predictionr = _r.GetPrediction(t);
-                if (t.IsValidTarget(_r.Range) && predictionr.HitChance >= HitChance.High)
-                    _r.Cast(t);
+                if (t.IsValidTarget(_r.Range) && predictionr.HitChance >= HitChance.High) _r.Cast(t);
             }
         }
 
@@ -271,29 +281,28 @@ namespace D_Kogmaw
             if (useQ && _q.IsReady())
             {
                 var t = TargetSelector.GetTarget(_q.Range, DamageType.Magical);
-                if (t.IsValidTarget(_q.Range) && _q.GetPrediction(t).HitChance >= HitChance.High)
-                    _q.Cast(t);
+                if (t.IsValidTarget(_q.Range) && _q.GetPrediction(t).HitChance >= HitChance.High) _q.Cast(t);
             }
 
             if (useE && _e.IsReady())
             {
                 var t = TargetSelector.GetTarget(_e.Range, DamageType.Magical);
-                if (t.IsValidTarget(_e.Range) && _e.GetPrediction(t).HitChance >= HitChance.High)
-                    _e.Cast(t);
+                if (t.IsValidTarget(_e.Range) && _e.GetPrediction(t).HitChance >= HitChance.High) _e.Cast(t);
             }
 
             if (useR && _r.IsReady() && GetBuffStacks() < rLimH)
             {
                 var t = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
-                if (t.IsValidTarget(_r.Range) && _r.GetPrediction(t).HitChance >= HitChance.High)
-                    _r.Cast(t);
+                if (t.IsValidTarget(_r.Range) && _r.GetPrediction(t).HitChance >= HitChance.High) _r.Cast(t);
             }
         }
 
         private static void Laneclear()
         {
-            var minion = EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, _player.Position,
-               _e.Range);
+            var minion = EntityManager.MinionsAndMonsters.GetLaneMinions(
+                EntityManager.UnitTeam.Enemy,
+                _player.Position,
+                _e.Range);
             var useQ = _farmmenu["UseQL"].Cast<CheckBox>().CurrentValue;
             var useE = _farmmenu["UseEL"].Cast<CheckBox>().CurrentValue;
             var useR = _farmmenu["UseRL"].Cast<CheckBox>().CurrentValue;
@@ -308,9 +317,8 @@ namespace D_Kogmaw
                         _q.Cast(mobs);
                     }
 
-                    else if (mobs.Distance(_player) > _player.GetAutoAttackRange(mobs) &&
-                             mobs.Health < 0.75*_player.GetSpellDamage(mobs, SpellSlot.Q))
-                        _q.Cast(mobs);
+                    else if (mobs.Distance(_player) > _player.GetAutoAttackRange(mobs)
+                             && mobs.Health < 0.75 * _player.GetSpellDamage(mobs, SpellSlot.Q)) _q.Cast(mobs);
                 }
                 if (_e.IsReady() && useE)
                 {
@@ -318,9 +326,8 @@ namespace D_Kogmaw
                     {
                         _e.Cast(mobs);
                     }
-                    else if (mobs.Distance(_player) > _player.GetAutoAttackRange(mobs) &&
-                             mobs.Health < 0.75*_player.GetSpellDamage(mobs, SpellSlot.E))
-                        _e.Cast(mobs);
+                    else if (mobs.Distance(_player) > _player.GetAutoAttackRange(mobs)
+                             && mobs.Health < 0.75 * _player.GetSpellDamage(mobs, SpellSlot.E)) _e.Cast(mobs);
                 }
                 if (_r.IsReady() && useR && GetBuffStacks() < rLimL)
                 {
@@ -331,9 +338,8 @@ namespace D_Kogmaw
                         _r.Cast(mobs);
                     }
 
-                    else if (mobs.Distance(_player) > _player.GetAutoAttackRange(mobs) &&
-                             mobs.Health < 0.75*_player.GetSpellDamage(mobs, SpellSlot.R))
-                        _r.Cast(mobs);
+                    else if (mobs.Distance(_player) > _player.GetAutoAttackRange(mobs)
+                             && mobs.Health < 0.75 * _player.GetSpellDamage(mobs, SpellSlot.R)) _r.Cast(mobs);
                 }
             }
         }
@@ -370,10 +376,7 @@ namespace D_Kogmaw
         {
             if (_player.HasBuff("KogMawLivingArtillery"))
             {
-                return _player.Buffs
-                    .Where(x => x.DisplayName == "KogMawLivingArtillery")
-                    .Select(x => x.Count)
-                    .First();
+                return _player.Buffs.Where(x => x.DisplayName == "KogMawLivingArtillery").Select(x => x.Count).First();
             }
             else
             {
@@ -383,9 +386,8 @@ namespace D_Kogmaw
 
         private static void KillSteal()
         {
-            foreach (
-                var target in
-                    HeroManager.Enemies.Where(hero => hero.IsValidTarget(_r.Range) && !hero.IsDead && !hero.IsZombie))
+            foreach (var target in
+                EntityManager.Heroes.Enemies.Where(hero => hero.IsValidTarget(_r.Range) && !hero.IsDead && !hero.IsZombie))
             {
                 if (_miscmenu["UseRM"].Cast<CheckBox>().CurrentValue && _r.IsReady() && target.Health < RDamage(target))
                 {
@@ -396,10 +398,12 @@ namespace D_Kogmaw
 
         private static float RDamage(Obj_AI_Base target)
         {
-            return _player.CalculateDamageOnUnit(target, DamageType.Magical,
+            return _player.CalculateDamageOnUnit(
+                target,
+                DamageType.Magical,
                 (float)
-                    (new[] {80, 120, 160}[Program._r.Level] + 1.3*_player.FlatMagicDamageMod +
-                     1.5*_player.FlatPhysicalDamageMod));
+                (new[] { 80, 120, 160 }[Program._r.Level] + 1.3 * _player.FlatMagicDamageMod
+                 + 1.5 * _player.FlatPhysicalDamageMod));
         }
 
         private static void Drawing_OnDraw(EventArgs args)
@@ -410,39 +414,47 @@ namespace D_Kogmaw
             {
                 if (harass)
                 {
-                    Drawing.DrawText(Drawing.Width*0.02f, Drawing.Height*0.92f, Color.GreenYellow,
+                    Drawing.DrawText(
+                        Drawing.Width * 0.02f,
+                        Drawing.Height * 0.92f,
+                        Color.GreenYellow,
                         "Auto harass Enabled");
                 }
                 else
-                    Drawing.DrawText(Drawing.Width*0.02f, Drawing.Height*0.92f, Color.OrangeRed,
+                    Drawing.DrawText(
+                        Drawing.Width * 0.02f,
+                        Drawing.Height * 0.92f,
+                        Color.OrangeRed,
                         "Auto harass Disabled");
             }
 
             if (_drawmenu["DrawQ"].Cast<CheckBox>().CurrentValue && _q.Level > 0)
             {
-                new Circle() {Color = Color.GreenYellow, BorderWidth = 1, Radius = _q.Range}.Draw(_player.Position);
+                new Circle() { Color = Color.GreenYellow, BorderWidth = 1, Radius = _q.Range }.Draw(_player.Position);
             }
             if (_drawmenu["DrawW"].Cast<CheckBox>().CurrentValue && _w.Level > 0)
             {
                 new Circle()
-                {
-                    Color = Color.GreenYellow,
-                    BorderWidth = 1,
-                    Radius = (uint) (760 + 20*_player.Spellbook.GetSpell(SpellSlot.W).Level)
-                }.Draw(_player.Position);
+                    {
+                        Color = Color.GreenYellow,
+                        BorderWidth = 1,
+                        Radius = (uint)(760 + 20 * _player.Spellbook.GetSpell(SpellSlot.W).Level)
+                    }.Draw(
+                        _player.Position);
             }
             if (_drawmenu["DrawE"].Cast<CheckBox>().CurrentValue && _e.Level > 0)
             {
-                new Circle() {Color = Color.GreenYellow, BorderWidth = 1, Radius = _e.Range}.Draw(_player.Position);
+                new Circle() { Color = Color.GreenYellow, BorderWidth = 1, Radius = _e.Range }.Draw(_player.Position);
             }
             if (_drawmenu["DrawR"].Cast<CheckBox>().CurrentValue && _r.Level > 0)
             {
                 new Circle()
-                {
-                    Color = Color.GreenYellow,
-                    BorderWidth = 1,
-                    Radius = (uint) (800 + 300*_player.Spellbook.GetSpell(SpellSlot.R).Level)
-                }.Draw(_player.Position);
+                    {
+                        Color = Color.GreenYellow,
+                        BorderWidth = 1,
+                        Radius = (uint)(800 + 300 * _player.Spellbook.GetSpell(SpellSlot.R).Level)
+                    }.Draw(
+                        _player.Position);
             }
         }
     }
